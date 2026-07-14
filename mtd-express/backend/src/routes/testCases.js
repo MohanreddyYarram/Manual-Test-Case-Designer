@@ -7,38 +7,36 @@ const { callClaudeAPI } = require("../utils/claudeClient");
 
 router.post("/generate-testcases", async (req, res) => {
 
-  // 1. Validate
   const { valid, errors, sanitised } = validateInput(req.body);
   if (!valid) {
     console.log("Validation failed:", errors);
     return res.status(400).json({ error: "Validation failed", details: errors });
   }
 
-  // 2. Call Claude
-  console.log(`→ Generating | appType=${sanitised.appType}`);
+  console.log(`→ Generating | appType=${sanitised.appType} | hasPrereqs=${!!sanitised.prerequisiteSteps}`);
+
   let rawContent;
   try {
     const { systemPrompt, userPrompt } = buildPrompt(sanitised);
     rawContent = await callClaudeAPI(systemPrompt, userPrompt);
-    console.log(`→ Claude responded | length=${rawContent.length} chars`);
+    console.log(`→ Claude responded | ${rawContent.length} chars`);
   } catch (err) {
     console.error("Claude API error:", err.message);
     return res.status(502).json({ error: "AI generation failed", details: err.message });
   }
 
-  // 3. Parse JSON
   let result;
   try {
     result = JSON.parse(rawContent);
   } catch (parseErr) {
-    // Log the full raw content so we can see what went wrong
-    console.error("JSON parse failed:", parseErr.message);
-    console.error("Raw content (first 500 chars):", rawContent?.substring(0, 500));
-    console.error("Raw content (last 200 chars):",  rawContent?.slice(-200));
+    console.error("JSON parse failed:", rawContent?.substring(0, 500));
     return res.status(500).json({ error: "AI returned invalid JSON. Please retry." });
   }
 
-  console.log(`✓ Done | standard=${result.standardTestCases?.length} bdd=${result.bddTestCases?.length}`);
+  // Attach userStory to result for Excel export
+  result.userStory = sanitised.userStory;
+
+  console.log(`✓ Done | ${result.testCases?.length} test cases`);
   res.json(result);
 });
 

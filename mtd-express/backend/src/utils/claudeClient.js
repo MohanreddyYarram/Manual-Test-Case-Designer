@@ -11,7 +11,7 @@ function callClaudeAPI(systemPrompt, userPrompt) {
 
     const bodyData = JSON.stringify({
       model:      "claude-haiku-4-5-20251001",  // faster + cheaper than Sonnet
-      max_tokens: 4096,
+      max_tokens: 16000,
       system:     systemPrompt,
       messages:   [{ role: "user", content: userPrompt }],
     });
