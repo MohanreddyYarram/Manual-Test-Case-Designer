@@ -8,7 +8,7 @@ const exportRoutes = require("./src/routes/exportExcel");
 const app  = express();
 const PORT = process.env.PORT || 5000;
 
-app.use(cors({ origin: "http://localhost:3000" }));
+app.use(cors({ origin: "*" }));
 app.use(express.json({ limit: "2mb" }));  // allow large result JSON for export
 
 app.use("/api", testRoutes);
